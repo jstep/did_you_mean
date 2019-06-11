@@ -1,17 +1,20 @@
 import os
 import re
 import sys
+import timeit
 
 
 #####################################
 # Edit/Levenshtein distance functions
 #####################################
 def call_counter(func):
+    # Decorator used for debugging how many times a function was called.
     def helper(*args, **kwargs):
         helper.calls += 1
         return func(*args, **kwargs)
     helper.calls = 0
     helper.__name__= func.__name__
+    print(helper)
     return helper
 
 def memoize(func):
@@ -23,7 +26,7 @@ def memoize(func):
         return mem[key]
     return memoizer
 
-@call_counter
+call_counter
 @memoize    
 def levenshtein(s, t):
     if s == "":
@@ -35,9 +38,9 @@ def levenshtein(s, t):
     else:
         cost = 1
     
-    res = min([levenshtein(s[:-1], t)+1,
-               levenshtein(s, t[:-1])+1, 
-               levenshtein(s[:-1], t[:-1]) + cost])
+    res = min([levenshtein(s[:-1], t) + 1,
+               levenshtein(s, t[:-1]) + 1,
+               levenshtein(s[:-1], t[:-1]) + cost ])
     return res
 
 #####################################
@@ -69,9 +72,9 @@ def member_word(word):
 
 def closest_match(input_word, words):
     member_word(input_word) 
-    
+
     print("Calculating edit distance...")   
-    
+
     # Compute the edit distance between the input word and all words.
     ld_values_list = [levenshtein(input_word, w) for w in words]
     
@@ -80,12 +83,17 @@ def closest_match(input_word, words):
     # Merge the computed edit values list with the words list.
     ld_dict = dict(zip(ld_values_list, words))
    
-   
-    print("crossing t's...\n")   
+    print("crossing t's...")   
    
     # Get the min value of the edit values list.
     min_key = min(ld_dict.keys())
 
     return ld_dict.get(min_key)
 
-print("Did you mean {}?".format(closest_match(input_word, all_words_set)))
+if __name__ == "__main__":
+    start = timeit.default_timer() 
+    print("Did you mean {}?".format(closest_match(input_word, all_words_set)))
+    end = timeit.default_timer()
+    print('Time taken: {0:.2f} seconds\n'.format(end - start))
+    print("The function was called " + str(levenshtein.calls) + " times!")
+
