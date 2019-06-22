@@ -2,7 +2,9 @@ import os
 import re
 import sys
 import timeit
+from typing import Set 
 
+from utils import clear
 
 #####################################
 # Edit/Levenshtein distance functions
@@ -14,7 +16,6 @@ def call_counter(func):
         return func(*args, **kwargs)
     helper.calls = 0
     helper.__name__= func.__name__
-    print(helper)
     return helper
 
 def memoize(func):
@@ -26,9 +27,9 @@ def memoize(func):
         return mem[key]
     return memoizer
 
-call_counter
+@call_counter
 @memoize    
-def levenshtein(s, t):
+def levenshtein(s: str, t: str) -> int:
     if s == "":
         return len(t)
     if t == "":
@@ -47,10 +48,8 @@ def levenshtein(s, t):
 # End of Edit/Levenshtien functions
 #####################################
 
-try:
-    input_word = sys.argv[1].lower()
-except IndexError:
-    sys.exit("Please provide a word as an argument")
+clear()  # clear the terminal screen.
+input_word = input("\n\nPlease enter a word.\n")
 
 if os.path.exists('/usr/dict/words'):
     path_to_words = '/usr/dict/words' 
@@ -59,31 +58,27 @@ elif os.path.exists('/usr/share/dict/words'):
 else:
     sys.exit("Words file not found. Exiting...")
 
-print("Checking {arg} against words in {file}".format(arg=input_word, file=path_to_words))
+print(f"\nChecking {input_word} against words in {path_to_words}")
 
 # Open and grab the words in the file.
 with open(path_to_words) as f:
     all_words_set = {line.strip().lower() for line in f}
 
-def member_word(word):
+def real_word(word):
     """Check if word is in word set. I.e. it's not a mispelled word. """
     if word in all_words_set:
         sys.exit("{} is a real word!".format(sys.argv[1]))
 
-def closest_match(input_word, words):
-    member_word(input_word) 
+def closest_match(input_word: str, words: Set) -> str:
+    real_word(input_word) 
 
     print("Calculating edit distance...")   
 
     # Compute the edit distance between the input word and all words.
     ld_values_list = [levenshtein(input_word, w) for w in words]
     
-    print("dotting i's...")   
-
     # Merge the computed edit values list with the words list.
     ld_dict = dict(zip(ld_values_list, words))
-   
-    print("crossing t's...")   
    
     # Get the min value of the edit values list.
     min_key = min(ld_dict.keys())
@@ -92,8 +87,9 @@ def closest_match(input_word, words):
 
 if __name__ == "__main__":
     start = timeit.default_timer() 
-    print("Did you mean {}?".format(closest_match(input_word, all_words_set)))
+    print(f"\nDid you mean {closest_match(input_word, all_words_set)}?\n")
     end = timeit.default_timer()
-    print('Time taken: {0:.2f} seconds\n'.format(end - start))
-    print("The function was called " + str(levenshtein.calls) + " times!")
+    
+    print(f'The function was called {levenshtein.calls} times.')
+    print(f'Time taken: {end-start:.2f} seconds\n')
 
