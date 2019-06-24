@@ -4,49 +4,9 @@ import sys
 import timeit
 from typing import Set 
 
+from levenshtein import levenshtein
+
 from utils import clear
-
-#####################################
-# Edit/Levenshtein distance functions
-#####################################
-def call_counter(func):
-    # Decorator used for debugging how many times a function was called.
-    def helper(*args, **kwargs):
-        helper.calls += 1
-        return func(*args, **kwargs)
-    helper.calls = 0
-    helper.__name__= func.__name__
-    return helper
-
-def memoize(func):
-    mem = {}
-    def memoizer(*args, **kwargs):
-        key = str(args) + str(kwargs)
-        if key not in mem:
-            mem[key] = func(*args, **kwargs)
-        return mem[key]
-    return memoizer
-
-@call_counter
-@memoize    
-def levenshtein(s: str, t: str) -> int:
-    if s == "":
-        return len(t)
-    if t == "":
-        return len(s)
-    if s[-1] == t[-1]:
-        cost = 0
-    else:
-        cost = 1
-    
-    res = min([levenshtein(s[:-1], t) + 1,
-               levenshtein(s, t[:-1]) + 1,
-               levenshtein(s[:-1], t[:-1]) + cost ])
-    return res
-
-#####################################
-# End of Edit/Levenshtien functions
-#####################################
 
 clear()  # clear the terminal screen.
 input_word = input("\n\nPlease enter a word.\n")
@@ -60,14 +20,14 @@ else:
 
 print(f"\nChecking {input_word} against words in {path_to_words}")
 
-# Open and grab the words in the file.
+# Open and grab the words in the file as a set.
 with open(path_to_words) as f:
     all_words_set = {line.strip().lower() for line in f}
 
 def real_word(word):
     """Check if word is in word set. I.e. it's not a mispelled word. """
     if word in all_words_set:
-        sys.exit("{} is a real word!".format(sys.argv[1]))
+        sys.exit(f"{word} is a real word!")
 
 def closest_match(input_word: str, words: Set) -> str:
     real_word(input_word) 
@@ -87,9 +47,13 @@ def closest_match(input_word: str, words: Set) -> str:
 
 if __name__ == "__main__":
     start = timeit.default_timer() 
-    print(f"\nDid you mean {closest_match(input_word, all_words_set)}?\n")
+    closest_match = closest_match(input_word, all_words_set)
+    print(f"\nDid you mean {closest_match}?")
     end = timeit.default_timer()
+    print(f"---------------")
     
+    print(f"https://www.merriam-webster.com/dictionary/{closest_match}\n")
+
     print(f'The function was called {levenshtein.calls} times.')
     print(f'Time taken: {end-start:.2f} seconds\n')
 
